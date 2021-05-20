@@ -1597,7 +1597,9 @@ Error gc_execute_line(char* line, uint8_t client) {
                 coords[gc_state.modal.coord_select]->get(gc_state.coord_system);
                 system_flag_wco_change();  // Set to refresh immediately just in case something altered.
                 spindle->set_state(SpindleState::Disable, 0);
+#ifndef DISABLE_COOLANT_RESET
                 coolant_off();
+#endif
             }
             report_feedback_message(Message::ProgramEnd);
             user_m30();

@@ -512,7 +512,9 @@ void mc_reset() {
         sys_rt_exec_state.bit.reset = true;
         // Kill spindle and coolant.
         spindle->stop();
+#ifndef DISABLE_COOLANT_RESET
         coolant_stop();
+#endif
 
         // turn off all User I/O immediately
         sys_digital_all_off();

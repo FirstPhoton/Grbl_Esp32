@@ -74,6 +74,9 @@ Error add_char_to_line(char c, uint8_t client) {
     return Error::Ok;
 }
 
+#ifdef DISABLE_COOLANT_RESET
+extern void collapseGCode(char* line);
+#endif
 Error execute_line(char* line, uint8_t client, WebUI::AuthenticationLevel auth_level) {
     Error result = Error::Ok;
     // Empty or comment line. For syncing purposes.
@@ -86,6 +89,12 @@ Error execute_line(char* line, uint8_t client, WebUI::AuthenticationLevel auth_l
     }
     // Everything else is gcode. Block if in alarm or jog mode.
     if (sys.state == State::Alarm || sys.state == State::Jog) {
+#ifdef DISABLE_COOLANT_RESET
+        collapseGCode(line);
+        if(line[0] == 'M' && line[1] >= '7' && line[1] <= '9') {
+          return gc_execute_line(line, client);
+        }
+#endif
         return Error::SystemGcLock;
     }
     return gc_execute_line(line, client);
@@ -486,19 +495,29 @@ void protocol_exec_rt_system() {
     if (sys_rt_exec_accessory_override.bit.coolantFloodOvrToggle) {
         sys_rt_exec_accessory_override.bit.coolantFloodOvrToggle = false;
 #ifdef COOLANT_FLOOD_PIN
+#ifndef DISABLE_COOLANT_RESET
         if (sys.state == State::Idle || sys.state == State::Cycle || sys.state == State::Hold) {
             gc_state.modal.coolant.Flood = !gc_state.modal.coolant.Flood;
             coolant_set_state(gc_state.modal.coolant);  // Report counter set in coolant_set_state().
         }
+#else
+        gc_state.modal.coolant.Flood = !gc_state.modal.coolant.Flood;
+        coolant_set_state(gc_state.modal.coolant);  // Report counter set in coolant_set_state().
+#endif
 #endif
     }
     if (sys_rt_exec_accessory_override.bit.coolantMistOvrToggle) {
         sys_rt_exec_accessory_override.bit.coolantMistOvrToggle = false;
 #ifdef COOLANT_MIST_PIN
+#ifndef DISABLE_COOLANT_RESET
         if (sys.state == State::Idle || sys.state == State::Cycle || sys.state == State::Hold) {
             gc_state.modal.coolant.Mist = !gc_state.modal.coolant.Mist;
             coolant_set_state(gc_state.modal.coolant);  // Report counter set in coolant_set_state().
         }
+#else
+        gc_state.modal.coolant.Mist = !gc_state.modal.coolant.Mist;
+        coolant_set_state(gc_state.modal.coolant);  // Report counter set in coolant_set_state().
+#endif
 #endif
     }
 
@@ -586,7 +605,9 @@ static void protocol_exec_rt_suspend() {
                     sys.spindle_stop_ovr.value = 0;  // Disable override
 #ifndef PARKING_ENABLE
                     spindle->set_state(SpindleState::Disable, 0);  // De-energize
+#ifndef DISABLE_COOLANT_RESET
                     coolant_off();
+#endif
 #else
                     // Get current position and store restore location and spindle retract waypoint.
                     if (!sys.suspend.bit.restartRetract) {
@@ -627,7 +648,9 @@ static void protocol_exec_rt_suspend() {
                         // Parking motion not possible. Just disable the spindle and coolant.
                         // NOTE: Laser mode does not start a parking motion to ensure the laser stops immediately.
                         spindle->set_state(SpindleState::Disable, 0);  // De-energize
+#ifndef DISABLE_COOLANT_RESET
                         coolant_off();
+#endif
                     }
 #endif
                     sys.suspend.bit.restartRetract  = false;

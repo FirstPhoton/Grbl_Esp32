@@ -1,6 +1,14 @@
-
-
 # Grbl (CNC Controller) For ESP32
+
+
+![](doc/images/flood-mist-bypassing.png)
+
+This fork is to test modifications needed to wrestle control of the FLOOD and MIST
+signals away from GRBL which automatically shuts them off when alarms are
+encountered. It also allows control of these signals when GRBL is in an
+alarmed state.
+
+_Original readme Follows..._
 
 <img src="https://user-images.githubusercontent.com/189677/93836185-74c27500-fc47-11ea-8bed-5d419974c196.jpg" width="600">
 

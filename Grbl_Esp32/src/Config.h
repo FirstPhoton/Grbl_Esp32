@@ -65,6 +65,10 @@ Some features should not be changed. See notes below.
 // machine.h must be edited to choose the desired file.
 #include "Machine.h"
 
+// Disable Coolant Reset to allow use of FLOOD and MIST pins
+// for other functions
+#define DISABLE_COOLANT_RESET
+
 // machine_common.h contains settings that do not change
 #include "MachineCommon.h"
 

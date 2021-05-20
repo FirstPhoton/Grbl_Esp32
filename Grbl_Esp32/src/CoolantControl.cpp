@@ -43,7 +43,9 @@ void coolant_init() {
         init_message = false;
     }
 
+#ifndef DISABLE_COOLANT_RESET
     coolant_stop();
+#endif
 }
 
 // Returns current coolant output state. Overrides may alter it from programmed state.
@@ -107,9 +109,11 @@ void coolant_stop() {
 // parser program end, and g-code parser coolant_sync().
 
 void coolant_set_state(CoolantState state) {
+#ifndef DISABLE_COOLANT_RESET
     if (sys.abort) {
         return;  // Block during abort.
     }
+#endif
     coolant_write(state);
     sys.report_ovr_counter = 0;  // Set to report change immediately
 }
